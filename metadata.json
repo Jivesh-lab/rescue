@@ -1,0 +1,7 @@
+{
+  "name": "RescueNet - Crisis Response System",
+  "description": "An integrated emergency response dashboard featuring AI triage, real-time mapping, resource management, and operational intelligence tools like confidence scoring and responder checklists.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
