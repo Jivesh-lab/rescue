@@ -15,6 +15,7 @@ interface EmergencyService {
 }
 
 const OVERPASS_API = 'https://overpass-api.de/api/interpreter';
+const TIMEOUT_MS = 15000; // 15 second timeout
 
 // Fetch nearby hospitals
 export const fetchNearbyHospitals = async (lat: number, lng: number, radius = 5000): Promise<EmergencyService[]> => {
@@ -28,10 +29,23 @@ export const fetchNearbyHospitals = async (lat: number, lng: number, radius = 50
   `;
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+    
     const response = await fetch(OVERPASS_API, {
       method: 'POST',
-      body: query
+      body: query,
+      signal: controller.signal
     });
+    
+    clearTimeout(timeoutId);
+    
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      console.warn('Overpass API returned non-JSON response');
+      return [];
+    }
+    
     const data = await response.json();
     
     return data.elements.map((element: any, index: number) => ({
@@ -65,10 +79,23 @@ export const fetchNearbyFireStations = async (lat: number, lng: number, radius =
   `;
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    
     const response = await fetch(OVERPASS_API, {
       method: 'POST',
-      body: query
+      body: query,
+      signal: controller.signal
     });
+    
+    clearTimeout(timeoutId);
+    
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      console.warn('Overpass API returned non-JSON response');
+      return [];
+    }
+    
     const data = await response.json();
     
     return data.elements.map((element: any, index: number) => ({
@@ -101,10 +128,23 @@ export const fetchNearbyPoliceStations = async (lat: number, lng: number, radius
   `;
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    
     const response = await fetch(OVERPASS_API, {
       method: 'POST',
-      body: query
+      body: query,
+      signal: controller.signal
     });
+    
+    clearTimeout(timeoutId);
+    
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      console.warn('Overpass API returned non-JSON response');
+      return [];
+    }
+    
     const data = await response.json();
     
     return data.elements.map((element: any, index: number) => ({
@@ -139,10 +179,23 @@ export const fetchNearbyShelters = async (lat: number, lng: number, radius = 500
   `;
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    
     const response = await fetch(OVERPASS_API, {
       method: 'POST',
-      body: query
+      body: query,
+      signal: controller.signal
     });
+    
+    clearTimeout(timeoutId);
+    
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      console.warn('Overpass API returned non-JSON response');
+      return [];
+    }
+    
     const data = await response.json();
     
     return data.elements.map((element: any, index: number) => ({

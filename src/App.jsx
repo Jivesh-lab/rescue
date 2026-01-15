@@ -1,8 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Severity, IncidentType, ResourceType, ConfidenceLevel, StressLevel } from '../types';
-import { CHECKLIST_TEMPLATES } from '../constants';
-import { autoTriageIncident, generateTacticalSummary } from './src/services/geminiService';
+import { CHECKLIST_TEMPLATES } from './constants';
 import { fetchAllEmergencyServices } from './services/emergencyDataService';
 
 // Components
@@ -49,6 +48,8 @@ const App = () => {
   const [tacticalSummary, setTacticalSummary] = useState("Scanning area for signals...");
   const [loading, setLoading] = useState(false);
   const [loadingServices, setLoadingServices] = useState(false);
+  const [apiError, setApiError] = useState(null);
+  const [hasFetched, setHasFetched] = useState(false); // Prevent multiple fetches
   const [userPos, setUserPos] = useState(() => {
     const saved = localStorage.getItem('rescue_userPos');
     return saved ? JSON.parse(saved) : { lat: 40.7128, lng: -74.0060 };
@@ -56,19 +57,45 @@ const App = () => {
 
   // Geolocation & Load Live Emergency Services Data
   useEffect(() => {
+    // Prevent multiple calls
+    if (hasFetched) return;
+    
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(async (pos) => {
         const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setUserPos(coords);
         localStorage.setItem('rescue_userPos', JSON.stringify(coords));
         
-        // Fetch live emergency services data
+        // Check if we have cached resources and when they were fetched
+        const cachedResources = localStorage.getItem('rescue_resources');
+        const cacheTimestamp = localStorage.getItem('rescue_resources_timestamp');
+        const ONE_DAY = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+        
+        const isCacheValid = cachedResources && cacheTimestamp && 
+                             (Date.now() - parseInt(cacheTimestamp)) < ONE_DAY;
+        
+        if (isCacheValid) {
+          // Use cached data if it's less than 24 hours old
+          console.log('Using cached emergency services data');
+          const cachedData = JSON.parse(cachedResources);
+          setResources(cachedData);
+          setApiError(null);
+          setHasFetched(true);
+          return;
+        }
+        
+        // Fetch live emergency services data only if cache is expired or doesn't exist
+        console.log('Fetching fresh emergency services data...');
         setLoadingServices(true);
+        setHasFetched(true); // Mark as fetched immediately to prevent duplicate calls
+        
         try {
           const liveServices = await fetchAllEmergencyServices(coords.lat, coords.lng, 10000);
           if (liveServices.length > 0) {
             setResources(liveServices);
             localStorage.setItem('rescue_resources', JSON.stringify(liveServices));
+            localStorage.setItem('rescue_resources_timestamp', Date.now().toString());
+            setApiError(null);
           } else {
             // Fallback to initial resources if no data found
             const fallbackResources = INITIAL_RESOURCES.map((res, i) => ({
@@ -78,6 +105,8 @@ const App = () => {
             }));
             setResources(fallbackResources);
             localStorage.setItem('rescue_resources', JSON.stringify(fallbackResources));
+            localStorage.setItem('rescue_resources_timestamp', Date.now().toString());
+            setApiError('No emergency services found in your area. Using mock data.');
           }
         } catch (error) {
           console.error('Failed to fetch live services:', error);
@@ -89,6 +118,14 @@ const App = () => {
           }));
           setResources(fallbackResources);
           localStorage.setItem('rescue_resources', JSON.stringify(fallbackResources));
+          localStorage.setItem('rescue_resources_timestamp', Date.now().toString());
+          
+          // Set error message based on error type
+          if (error.name === 'AbortError') {
+            setApiError('⚠️ Emergency services API timeout. Using local mock data.');
+          } else {
+            setApiError('⚠️ Emergency services API unavailable. Using local mock data.');
+          }
         } finally {
           setLoadingServices(false);
         }
@@ -104,7 +141,10 @@ const App = () => {
   useEffect(() => {
     localStorage.setItem('rescue_incidents', JSON.stringify(incidents));
     const active = incidents.filter(i => i.status === 'active');
-    generateTacticalSummary(active).then(setTacticalSummary);
+    const summary = active.length > 0 
+      ? `${active.length} active incident(s). ${active.filter(i => i.severity === Severity.CRITICAL).length} critical.`
+      : 'All clear. No active incidents.';
+    setTacticalSummary(summary);
   }, [incidents]);
 
   // FEATURE 3: Community Pulse Calculation
@@ -223,8 +263,12 @@ const App = () => {
 
     let severity = Severity.MEDIUM;
     if (settings.autoTriage) {
-      const triage = await autoTriageIncident(description, type);
-      severity = triage.severity;
+      // Simple auto-triage based on incident type
+      if (type === IncidentType.FIRE || type === IncidentType.MEDICAL) {
+        severity = Severity.HIGH;
+      } else if (type === IncidentType.CRIME) {
+        severity = Severity.CRITICAL;
+      }
     }
 
     const newIncident = {
@@ -311,6 +355,22 @@ const App = () => {
           communityStress={communityStress} 
           settings={settings} 
         />
+        
+        {/* API Error Alert */}
+        {apiError && (
+          <div className="bg-amber-600/20 border-l-4 border-amber-600 text-amber-200 px-6 py-3 mx-6 mt-4 rounded-r flex items-center justify-between shadow-lg">
+            <div className="flex items-center gap-3">
+              <i className="fas fa-exclamation-triangle text-xl"></i>
+              <span className="text-sm font-medium">{apiError}</span>
+            </div>
+            <button 
+              onClick={() => setApiError(null)} 
+              className="text-amber-200 hover:text-white transition-colors"
+            >
+              <i className="fas fa-times"></i>
+            </button>
+          </div>
+        )}
 
         <div className="flex-1 overflow-auto p-8">
           {view === 'dashboard' && (

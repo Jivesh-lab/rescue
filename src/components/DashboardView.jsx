@@ -1,6 +1,6 @@
 import React from 'react';
 import MapComponent from './MapComponent';
-import { SEVERITY_COLORS, TYPE_ICONS } from '../../constants';
+import { SEVERITY_COLORS, TYPE_ICONS } from '../constants';
 
 const DashboardView = ({ 
   incidents, 
