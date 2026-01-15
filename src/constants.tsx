@@ -1,5 +1,5 @@
 
-import { IncidentType } from './types';
+import { IncidentType } from '../types';
 
 export const CHECKLIST_TEMPLATES: Record<IncidentType, string[]> = {
   [IncidentType.FIRE]: ['Evacuate area', 'Cut power supply', 'Contain fire perimeter', 'Await fire brigade'],

@@ -1,5 +1,5 @@
 import React from 'react';
-import { StressLevel } from '../types';
+import { StressLevel } from '../../types';
 
 const Header = ({ communityStress, settings }) => {
   return (

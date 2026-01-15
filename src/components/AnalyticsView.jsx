@@ -1,5 +1,5 @@
 import React from 'react';
-import { Severity, ConfidenceLevel } from '../types';
+import { Severity, ConfidenceLevel } from '../../types';
 
 const AnalyticsView = ({ incidents, incidentDistribution }) => {
   return (

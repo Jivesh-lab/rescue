@@ -1,5 +1,5 @@
 import React from 'react';
-import { ResourceType } from '../types';
+import { ResourceType } from '../../types';
 import { fetchAllEmergencyServices } from '../services/emergencyDataService';
 
 const LiveMonitorView = ({ 

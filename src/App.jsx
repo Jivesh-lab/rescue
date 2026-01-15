@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Severity, IncidentType, ResourceType, ConfidenceLevel, StressLevel } from './types';
-import { CHECKLIST_TEMPLATES } from './constants';
-import { autoTriageIncident, generateTacticalSummary } from './services/geminiService';
+import { Severity, IncidentType, ResourceType, ConfidenceLevel, StressLevel } from '../types';
+import { CHECKLIST_TEMPLATES } from '../constants';
+import { autoTriageIncident, generateTacticalSummary } from './src/services/geminiService';
 import { fetchAllEmergencyServices } from './services/emergencyDataService';
 
 // Components

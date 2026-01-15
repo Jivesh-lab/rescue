@@ -1,5 +1,5 @@
 import React from 'react';
-import { ResourceType } from '../types';
+import { ResourceType } from '../../types';
 
 const ResourceEditModal = ({ isOpen, resource, onClose, onSubmit }) => {
   if (!isOpen || !resource) return null;

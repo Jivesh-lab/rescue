@@ -1,5 +1,5 @@
 import React from 'react';
-import { IncidentType } from '../types';
+import { IncidentType } from '../../types';
 
 const BroadcastModal = ({ isOpen, onClose, onSubmit, loading }) => {
   if (!isOpen) return null;
